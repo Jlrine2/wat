@@ -111,8 +111,10 @@ func (h *Hub) run() {
 	for {
 		select {
 		case client := <-h.register:
+			fmt.Println("Registered Sync Client")
 			h.clients[client] = true
 		case client := <-h.unregister:
+			fmt.Println("Deregistered Sync Client")
 			if _, ok := h.clients[client]; ok {
 				delete(h.clients, client)
 				close(client.send)
@@ -142,5 +144,4 @@ func SyncHandler(hub *Hub, w http.ResponseWriter, r *http.Request) {
 	go client.writePump()
 	go client.readPump()
 
-	fmt.Println("Registered Sync Client")
 }

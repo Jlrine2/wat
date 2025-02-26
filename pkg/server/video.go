@@ -12,8 +12,6 @@ var VideoTemplate string
 
 type VideoTemplateParameters struct {
 	VideoName string
-	Scheme    string
-	Host      string
 }
 
 func VideoHandler(w http.ResponseWriter, r *http.Request) {
@@ -23,8 +21,6 @@ func VideoHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	data := &VideoTemplateParameters{
 		VideoName: r.URL.Query().Get("videoName"),
-		Scheme:    scheme,
-		Host:      r.Host,
 	}
 	tmpl := template.Must(template.New("video").Parse(VideoTemplate))
 	err := tmpl.Execute(w, data)

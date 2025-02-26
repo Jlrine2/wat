@@ -4,44 +4,52 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Watch Video</title>
-</head>
-<body>
-<h1>Watch the Video</h1>
 
-<video id="video-player" width="720" height="auto" controls onpause="">
-    <source src="{{ .Scheme }}://{{ .Host }}/media/{{ .VideoName }}" type="video/mp4">
+    <script>
+        window.onload = function () {
+            const syncSocket = new WebSocket(`ws://${document.location.host}/ws`);
+            const urlParams = new URLSearchParams(window.location.search)
+            const videoName = urlParams.get("videoName")
+            const title = document.getElementById("title")
+            title.innerHTML = `Watching: ${videoName}`
+
+            const video = document.getElementById("video-player")
+            video.src = `${document.location.origin}/media/${videoName}`
+            video.onpause = (event) => {
+                const message = JSON.stringify({"event": "pause", "time": video.currentTime});
+                syncSocket.send(message)
+                console.log("sending ws message: ", message)
+            }
+            video.onplay = (event) => {
+                const message = JSON.stringify({"event": "play", "time": video.currentTime});
+                syncSocket.send(message)
+                console.log("sending ws message: ", message)
+            }
+
+            syncSocket.onmessage = (event) => {
+                const msg = JSON.parse(event.data)
+                console.log("recieved ws message: ", msg)
+                const eventType = msg.event
+                const time = msg.time
+                switch (eventType) {
+                    case "play":
+                        video.currentTime = time
+                        video.play()
+                        break
+                    case "pause":
+                        video.currentTime = time
+                        video.pause()
+                }
+            }
+        }
+    </script>
+</head>
+<body style="background-color: darkslategrey">
+<h1 id="title" style="justify-content: center; text-align: center; display: flex">Watch the Video</h1>
+
+<video id="video-player" width="90%" height="auto" controls onpause="" style="display: block; margin: 0 auto;border: 5px solid #000; ">
+    <source src="" type="video/mp4">
     Your browser does not support the video tag.
 </video>
-<script>
-    const syncSocket = new WebSocket("ws://{{ .Host }}/ws");
-    const video = document.getElementById("video-player")
-
-    video.onpause = (event) => {
-        const message = JSON.stringify({"event": "pause", "time": video.currentTime});
-        syncSocket.send(message)
-        console.log("sending ws message: ", message)
-    }
-    video.onplay = (event) => {
-        const message = JSON.stringify({"event": "play", "time": video.currentTime});
-        syncSocket.send(message)
-        console.log("sending ws message: ", message)
-    }
-
-    syncSocket.onmessage = (event) => {
-        const msg = JSON.parse(event.data)
-        console.log("recieved ws message: ", msg)
-        const eventType = msg.event
-        const time = msg.time
-        switch (eventType) {
-            case "play":
-                video.currentTime = time
-                video.play()
-                break
-            case "pause":
-                video.currentTime = time
-                video.pause()
-        }
-    }
-</script>
 </body>
 </html>
