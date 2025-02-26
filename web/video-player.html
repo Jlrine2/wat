@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Watch Video</title>
+</head>
+<body>
+<h1>Watch the Video</h1>
+
+<video id="video-player" width="720" height="auto" controls onpause="">
+    <source src="{{ .Scheme }}://{{ .Host }}/media/{{ .VideoName }}.mp4" type="video/mp4">
+    Your browser does not support the video tag.
+</video>
+<script>
+    const syncSocket = new WebSocket("ws://{{ .Host }}/ws");
+    const video = document.getElementById("video-player")
+
+    video.onpause = (event) => {
+        const message = JSON.stringify({"event": "pause", "time": video.currentTime});
+        syncSocket.send(message)
+        console.log("sending ws message: ", message)
+    }
+    video.onplay = (event) => {
+        const message = JSON.stringify({"event": "play", "time": video.currentTime});
+        syncSocket.send(message)
+        console.log("sending ws message: ", message)
+    }
+
+    syncSocket.onmessage = (event) => {
+        const msg = JSON.parse(event.data)
+        console.log("recieved ws message: ", msg)
+        const eventType = msg.event
+        const time = msg.time
+        switch (eventType) {
+            case "play":
+                video.currentTime = time
+                video.play()
+                break
+            case "pause":
+                video.currentTime = time
+                video.pause()
+        }
+    }
+</script>
+</body>
+</html>
