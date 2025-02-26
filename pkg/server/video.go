@@ -1,10 +1,14 @@
 package server
 
 import (
+	_ "embed"
 	"fmt"
 	"html/template"
 	"net/http"
 )
+
+//go:embed video.html
+var VideoTemplate string
 
 type VideoTemplateParameters struct {
 	VideoName string
@@ -22,7 +26,7 @@ func VideoHandler(w http.ResponseWriter, r *http.Request) {
 		Scheme:    scheme,
 		Host:      r.Host,
 	}
-	tmpl := template.Must(template.ParseFiles("web/video-player.html"))
+	tmpl := template.Must(template.New("video").Parse(VideoTemplate))
 	err := tmpl.Execute(w, data)
 	if err != nil {
 		fmt.Printf("Error rendering template for Video Page %s", err)

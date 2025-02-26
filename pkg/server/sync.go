@@ -118,7 +118,6 @@ func (h *Hub) run() {
 				close(client.send)
 			}
 		case message := <-h.broadcast:
-			fmt.Println(message)
 			for client := range h.clients {
 				select {
 				case client.send <- message:
