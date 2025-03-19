@@ -15,7 +15,7 @@ func main() {
 	flag.StringVar(&mediaPath, "m", "./media", mediaUsage)
 
 	flag.Parse()
-	s := server.NewWatServer(uint16(port), "./media")
+	s := server.NewWatServer(uint16(port), mediaPath)
 	err := s.Run()
 	if err != nil {
 		panic(err)
