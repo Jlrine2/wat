@@ -10,11 +10,24 @@
             const syncSocket = new WebSocket(`ws://${document.location.host}/ws`);
             const urlParams = new URLSearchParams(window.location.search)
             const videoName = urlParams.get("videoName")
+            const subtitleName = urlParams.get("subtitleName")
             const title = document.getElementById("title")
             title.innerHTML = `Watching: ${videoName}`
 
             const video = document.getElementById("video-player")
             video.src = `${document.location.origin}/media/${videoName}`
+            
+            // Add subtitle track if specified in URL
+            if (subtitleName) {
+                const track = document.createElement("track");
+                track.kind = "subtitles";
+                track.label = "Subtitles";
+                track.srclang = "en";
+                track.src = `${document.location.origin}/media/${subtitleName}`;
+                track.default = true;
+                video.appendChild(track);
+            }
+
             video.onpause = (event) => {
                 const message = JSON.stringify({"event": "pause", "time": video.currentTime});
                 syncSocket.send(message)
@@ -24,6 +37,17 @@
                 const message = JSON.stringify({"event": "play", "time": video.currentTime});
                 syncSocket.send(message)
                 console.log("sending ws message: ", message)
+            }
+            let lastSeekTime = 0;
+            video.onseeked = (event) => {
+                // Only send seek events if user manually sought the video
+                // and not from programmatic seeks from other events
+                if (Math.abs(video.currentTime - lastSeekTime) > 0.5) {
+                    const message = JSON.stringify({"event": "seek", "time": video.currentTime});
+                    syncSocket.send(message)
+                    console.log("sending ws message: ", message)
+                }
+                lastSeekTime = video.currentTime;
             }
 
             syncSocket.onmessage = (event) => {
@@ -39,6 +63,10 @@
                     case "pause":
                         video.currentTime = time
                         video.pause()
+                        break
+                    case "seek":
+                        video.currentTime = time
+                        break
                 }
             }
         }
