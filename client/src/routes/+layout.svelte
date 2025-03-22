@@ -3,45 +3,36 @@
 	let { children } = $props();
 	import { authConfig, checkAuth } from '$lib/auth';
 	
-	import { Navbar, NavBrand, NavLi, NavUl, Avatar, Dropdown, DropdownHeader, DropdownItem, Button, Alert } from 'flowbite-svelte';
+	import { Navbar, NavBrand, Avatar, Dropdown, DropdownHeader, DropdownItem, Frame } from 'flowbite-svelte';
     import LoginWithDiscord from '$lib/components/loginWithDiscord.svelte';
 </script>
 
-{#await checkAuth()}
-	<p>loading...</p>
-{:then _} 
-<Navbar>
+
+<Navbar color="gray" navContainerClass="flex flex-wrap justify-between -container items-center mx-0 w-full">
 	<NavBrand href="/">
-			<span class="self-center whitespace-nowrap text-xl font-semibold dark:text-white">WatchAnythingTogether</span>
+		<img src="/logo.svg" class="me-3 h-6 sm:h-9" alt="Watch Anything Together Logo" />
+		<span class="self-center whitespace-nowrap text-xl font-semibold dark:text-white">WatchAnythingTogether</span>
 	</NavBrand>
+
+	{#await checkAuth()}
+	<Avatar />
+	{:then _} 
 	{#if authConfig.isAuthenticated}
-	  <div class="flex items-center md:order-2">
-		<Avatar id="avatar-menu" src={authConfig.avatar} />
-	  </div>
-	  <Dropdown placement="bottom" triggeredBy="#avatar-menu">
-		<DropdownHeader>
-		  <span class="block text-sm">{authConfig.username}</span>
-		</DropdownHeader>
-		<DropdownItem on:click={() => {
-		  document.cookie = "watAuth=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-		  window.location.reload();
-		}}>Sign out</DropdownItem>
-	  </Dropdown>
+	<Avatar id="avatar-menu" src={authConfig.avatar} />
+	<Dropdown placement="bottom" triggeredBy="#avatar-menu">
+	<DropdownHeader>
+		<span class="block text-sm">{authConfig.username}</span>
+	</DropdownHeader>
+	<DropdownItem on:click={() => {
+		document.cookie = "watAuth=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+		window.location.reload();
+	}}>Sign out</DropdownItem>
+	</Dropdown>
 	{:else}
-	  <div class="flex md:order-2">
-		<LoginWithDiscord/>
-	  </div>
+	<LoginWithDiscord/>
 	{/if}
-	<NavUl>
-	  <NavLi href="/">Home</NavLi>
-	  <NavLi href="/watch">Watch</NavLi>
-	</NavUl>
+	{/await}
   </Navbar>
 
 {@render children()}
-{:catch}
-<Alert color="red">
-	<span class="font-medium">Something has gone Wrong!</span>
-</Alert>
-{/await}
 

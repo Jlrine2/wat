@@ -3,6 +3,8 @@ package main
 import (
 	"io"
 	"net/http"
+	"os"
+	"path/filepath"
 	"wat/internal/auth"
 )
 
@@ -111,6 +113,64 @@ func (app *application) GetAuthDetailsHandler(w http.ResponseWriter, r *http.Req
 func (app *application) MediaHandler(w http.ResponseWriter, r *http.Request) {
 	fileHandler := http.FileServer(http.Dir(app.config.Server.MediaLocation))
 	fileHandler.ServeHTTP(w, r)
+}
+
+func (app *application) MediaListHandler(w http.ResponseWriter, r *http.Request) {
+	files, err := os.ReadDir(app.config.Server.MediaLocation)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	fileNames := []string{}
+	for _, file := range files {
+		fileNames = append(fileNames, file.Name())
+	}
+	err = writeJSON(w, &fileNames, http.StatusOK, nil)
+	if err != nil {
+		http.Error(w, "We are unable to process your request right now", http.StatusInternalServerError)
+	}
+}
+
+func (app *application) MediaUploadHandler(w http.ResponseWriter, r *http.Request) {
+	// 10GB max file size
+	r.ParseMultipartForm(10 << 30)
+
+	file, handler, err := r.FormFile("file")
+	if err != nil {
+		app.logger.Error("Error retrieving file from form", "error", err.Error())
+		http.Error(w, "Error retrieving file from form", http.StatusBadRequest)
+		return
+	}
+	defer file.Close()
+
+	// Create destination file
+	dst, err := os.Create(filepath.Join(app.config.Server.MediaLocation, handler.Filename))
+	if err != nil {
+		app.logger.Error("Error creating destination file", "error", err.Error())
+		http.Error(w, "Error creating destination file", http.StatusInternalServerError)
+		return
+	}
+	defer dst.Close()
+
+	// Copy uploaded file to destination
+	_, err = io.Copy(dst, file)
+	if err != nil {
+		app.logger.Error("Error saving file", "error", err.Error())
+		http.Error(w, "Error saving file", http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusCreated)
+	http.Redirect(w, r, getHostandProto(r), http.StatusPermanentRedirect)
+}
+
+func (app *application) MediaDeleteHandler(w http.ResponseWriter, r *http.Request) {
+	filename := r.URL.Query().Get("filename")
+	err := os.Remove(filepath.Join(app.config.Server.MediaLocation, filename))
+	if err != nil {
+		http.Error(w, "Error deleting file", http.StatusInternalServerError)
+	}
+	w.WriteHeader(http.StatusOK)
+	http.Redirect(w, r, getHostandProto(r), http.StatusPermanentRedirect)
 }
 
 // Client Handler
