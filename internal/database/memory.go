@@ -6,12 +6,14 @@ import (
 )
 
 type MemoryDatabase struct {
-	sessions map[string]any
+	sessions     map[string]*models.AccessTokenDetails
+	watchParties map[string]*models.WatchParty
 }
 
 func NewMemoryDatabase() *MemoryDatabase {
 	return &MemoryDatabase{
-		sessions: map[string]any{},
+		sessions:     make(map[string]*models.AccessTokenDetails),
+		watchParties: make(map[string]*models.WatchParty),
 	}
 }
 
@@ -26,5 +28,19 @@ func (db *MemoryDatabase) GetAuthSession(key string) (*models.AccessTokenDetails
 		return nil, fmt.Errorf("auth session not found")
 	}
 
-	return result.(*models.AccessTokenDetails), nil
+	return result, nil
+}
+
+func (db *MemoryDatabase) CreateWatchParty(key string, value *models.WatchParty) error {
+	db.watchParties[key] = value
+	return nil
+}
+
+func (db *MemoryDatabase) GetAllWatchParties() (map[string]*models.WatchParty, error) {
+	return db.watchParties, nil
+}
+
+func (db *MemoryDatabase) DeleteWatchParty(key string) error {
+	delete(db.watchParties, key)
+	return nil
 }

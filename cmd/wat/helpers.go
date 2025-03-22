@@ -22,6 +22,10 @@ func writeJSON(w http.ResponseWriter, data any, status int, headers http.Header)
 	return nil
 }
 
+func readJSON(r *http.Request, data any) error {
+	return json.NewDecoder(r.Body).Decode(data)
+}
+
 func getHostandProto(r *http.Request) string {
 	// Try X-Forwarded headers first
 	host := r.Header.Get("X-Forwarded-Host")

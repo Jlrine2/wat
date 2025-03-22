@@ -6,6 +6,8 @@ import (
 	"os"
 	"path/filepath"
 	"wat/internal/auth"
+	"wat/internal/models"
+	"wat/internal/watchParties"
 )
 
 // status Handler
@@ -160,7 +162,6 @@ func (app *application) MediaUploadHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 	w.WriteHeader(http.StatusCreated)
-	http.Redirect(w, r, getHostandProto(r), http.StatusPermanentRedirect)
 }
 
 func (app *application) MediaDeleteHandler(w http.ResponseWriter, r *http.Request) {
@@ -170,7 +171,6 @@ func (app *application) MediaDeleteHandler(w http.ResponseWriter, r *http.Reques
 		http.Error(w, "Error deleting file", http.StatusInternalServerError)
 	}
 	w.WriteHeader(http.StatusOK)
-	http.Redirect(w, r, getHostandProto(r), http.StatusPermanentRedirect)
 }
 
 // Client Handler
@@ -199,4 +199,46 @@ func (app *application) ClientHandler(w http.ResponseWriter, r *http.Request) {
 	} else {
 		http.FileServer(http.Dir(app.config.Server.ClientLocation)).ServeHTTP(w, r)
 	}
+}
+
+// Watch Party Handlers
+func (app *application) CreateWatchPartyHandler(w http.ResponseWriter, r *http.Request) {
+
+	watchParty := &models.WatchParty{}
+	err := readJSON(r, watchParty)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	watchPartyId, err := watchParties.CreateWatchParty(app.db, watchParty)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	err = writeJSON(w, map[string]*models.WatchParty{watchPartyId: watchParty}, http.StatusCreated, nil)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
+func (app *application) ListWatchPartyHandler(w http.ResponseWriter, r *http.Request) {
+	watchParties, err := watchParties.GetAllWatchParties(app.db)
+	err = writeJSON(w, watchParties, http.StatusOK, nil)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
+func (app *application) DeleteWatchPartyHandler(w http.ResponseWriter, r *http.Request) {
+	watchPartyId := r.URL.Query().Get("watchPartyId")
+	err := watchParties.DeleteWatchParty(app.db, watchPartyId)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
 }
