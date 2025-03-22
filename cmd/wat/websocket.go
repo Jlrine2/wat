@@ -1,12 +1,13 @@
-package server
+package main
 
 import (
 	"bytes"
 	"fmt"
-	"github.com/gorilla/websocket"
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/gorilla/websocket"
 )
 
 const (
@@ -26,7 +27,7 @@ var (
 )
 
 type Client struct {
-	hub  *Hub
+	hub  *SyncHub
 	conn *websocket.Conn
 	send chan []byte
 }
@@ -92,22 +93,22 @@ func (c *Client) writePump() {
 	}
 }
 
-type Hub struct {
+type SyncHub struct {
 	clients    map[*Client]bool
 	broadcast  chan []byte
 	register   chan *Client
 	unregister chan *Client
 }
 
-func newHub() *Hub {
-	return &Hub{
+func newHub() *SyncHub {
+	return &SyncHub{
 		broadcast:  make(chan []byte),
 		register:   make(chan *Client),
 		unregister: make(chan *Client),
 		clients:    make(map[*Client]bool),
 	}
 }
-func (h *Hub) run() {
+func (h *SyncHub) Run() {
 	for {
 		select {
 		case client := <-h.register:
@@ -132,13 +133,13 @@ func (h *Hub) run() {
 	}
 }
 
-func SyncHandler(hub *Hub, w http.ResponseWriter, r *http.Request) {
+func (app *application) SyncHandler(w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-	client := &Client{hub: hub, conn: conn, send: make(chan []byte, 256)}
+	client := &Client{hub: app.syncHub, conn: conn, send: make(chan []byte, 256)}
 	client.hub.register <- client
 
 	go client.writePump()

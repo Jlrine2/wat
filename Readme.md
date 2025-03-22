@@ -5,6 +5,11 @@ sync with a group of people across any distance.
 
 ## Usage
 
+### Configure
+In order to use this app you will need to [create an application](https://discord.com/developers/applications) in Discords developer portal
+
+Copy the example config file and change values as neccessary.
+
 ### Setup the server
 
 In order to set up this app we will need a directory on our machine with the media we want to serve. This guide
@@ -13,7 +18,7 @@ will assume that there is a `./media` folder with mp4 video content.
 ```shell
 # before we can use we must build the image
 docker build -t wat:latest .
-docker run -it -p 8080 -v ./media:/media wat:latest -p 8080 -m /media
+docker run -it -p 8080 -v ./media:/media -v ./config/configFile.yaml:/etc/wat/config.yaml wat:latest
 ```
 
 ### Check that media can be served
@@ -22,11 +27,9 @@ Open `http://localhost:8080/media/<Name of some video file including .mp4 suffix
 
 If that opens a video player things should be working
 
-### Go to the watch party
+### Open the Client
 
-Open `http://locahost:8080/video?videoName=<Name of some video file including .mp4 suffix>`
-When opening your client will be registered with the watch party automatically and any play/pause events
-done by other members will be synced with your player and vice versa.
+Open `http://locahost:8080/`
 
 ## Features
 
@@ -37,8 +40,9 @@ implemented/planned features:
 
 ✅ Player Sync for Play/Pause Events
 
+✅ Auth with Discord
+
 🚧 Player Sync for Join Events
 
 🚧 Dynamic creation of "watch parties" and support for multiple concurrent "watch parties"
 
-🚧 Auth, UI, UX, etc

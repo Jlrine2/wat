@@ -1,5 +1,8 @@
 # local media folder
 media/*
+# configs
+config/*
+!config/example.yaml
 # IDE configs
 .idea
 .vscode

@@ -1,0 +1,14 @@
+server:
+  port: "8080"
+  host: localhost
+  media_location: /media
+  # example client location uses the built SSR page which exists at /client in the docker image
+  client_location: /client
+  # You can instead proxy to the node dev server if running locally
+  # client_location: http://localhost:5173
+
+discord:
+  client_id: "DiscordAppClientId"
+  client_secret: DiscordAppClientSecret
+  redirect_uri: http://localhost:8080/auth/discord/callback
+  guild_id: "DiscordGuidUsersMustBeInForAccess"
