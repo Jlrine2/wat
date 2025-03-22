@@ -1,6 +1,8 @@
 package database
 
+import "wat/internal/models"
+
 type DatabaseController interface {
-	SaveAuthSession(key string, value string) error
-	GetAuthSession(key string) (string, error)
+	SaveAuthSession(key string, value *models.AccessTokenDetails) error
+	GetAuthSession(key string) (*models.AccessTokenDetails, error)
 }

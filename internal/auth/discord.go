@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"time"
 	"wat/internal/config"
+	"wat/internal/models"
 )
 
 func GetDiscordOauthUrl(c *config.DiscordOauthConfig) string {
@@ -17,14 +18,7 @@ func GetDiscordOauthUrl(c *config.DiscordOauthConfig) string {
 	return oauthEndpoint
 }
 
-type DiscordAccessTokenDetails struct {
-	AccessToken  string `json:"access_token"`
-	ExpiresIn    int    `json:"expires_in"`
-	RefreshToken string `json:"refresh_token"`
-	Scope        string `json:"scope"`
-}
-
-func GetDiscordAccessToken(code string, config *config.DiscordOauthConfig) (*DiscordAccessTokenDetails, error) {
+func GetDiscordAccessToken(code string, config *config.DiscordOauthConfig) (*models.AccessTokenDetails, error) {
 	request, err := http.PostForm(
 		"https://discord.com/api/v10/oauth2/token",
 		url.Values{
@@ -43,7 +37,7 @@ func GetDiscordAccessToken(code string, config *config.DiscordOauthConfig) (*Dis
 	if err != nil {
 		return nil, err
 	}
-	var accessTokenDetails DiscordAccessTokenDetails
+	var accessTokenDetails models.AccessTokenDetails
 	err = json.Unmarshal(body, &accessTokenDetails)
 	if err != nil {
 		return nil, err
@@ -74,7 +68,7 @@ type DiscordAuthDetails struct {
 	} `json:"user"`
 }
 
-func GetDiscordAuthDetails(accessToken *DiscordAccessTokenDetails) (*DiscordAuthDetails, error) {
+func GetDiscordAuthDetails(accessToken *models.AccessTokenDetails) (*DiscordAuthDetails, error) {
 	request := http.Request{
 		Method: "GET",
 		URL:    &url.URL{Scheme: "https", Host: "discord.com", Path: "/api/v10/oauth2/@me"},
@@ -119,7 +113,7 @@ type guildsResponse []struct {
 	ApproximatePresenceCount int      `json:"approximate_presence_count"`
 }
 
-func GetDiscordGuildMembership(accessToken *DiscordAccessTokenDetails, guildId string) (bool, error) {
+func GetDiscordGuildMembership(accessToken *models.AccessTokenDetails, guildId string) (bool, error) {
 	request := http.Request{
 		Method: "GET",
 		URL:    &url.URL{Scheme: "https", Host: "discord.com", Path: "/api/v10/users/@me/guilds"},
