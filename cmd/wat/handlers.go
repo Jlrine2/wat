@@ -98,12 +98,7 @@ func (app *application) GetAuthDetailsHandler(w http.ResponseWriter, r *http.Req
 	if authenticated {
 		err = writeJSON(w, &authDetails, http.StatusOK, nil)
 	} else {
-		err = writeJSON(
-			w,
-			&map[string]bool{"authenticated": false},
-			http.StatusUnauthorized,
-			nil,
-		)
+		w.WriteHeader(http.StatusUnauthorized)
 	}
 	if err != nil {
 		http.Error(w, "We are unable to process your request right now", http.StatusInternalServerError)

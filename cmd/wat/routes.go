@@ -40,7 +40,8 @@ func (app *application) routes() http.Handler {
 		panic("Invalid discord callback url")
 	}
 	router.HandleFunc("GET "+redirectUri.Path, app.DiscordCallbackHandler)
-	router.HandleFunc("GET /auth/me", app.GetAuthDetailsHandler)
+	router.Handle("GET /auth/me", app.RequireAuthMiddleware(
+		http.HandlerFunc(app.GetAuthDetailsHandler)))
 
 	// Websocket
 	router.Handle("/ws", app.RequireAuthMiddleware(http.HandlerFunc(app.SyncHandler)))

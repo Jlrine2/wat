@@ -11,6 +11,7 @@ type ServerConfig struct {
 	Host           string `json:"host" yaml:"host"`
 	MediaLocation  string `json:"media_location" yaml:"media_location"`
 	ClientLocation string `json:"client_location" yaml:"client_location"`
+	AuthEnabled    bool   `json:"auth_enabled" yaml:"auth_enabled"`
 }
 
 type DiscordOauthConfig struct {

@@ -10,36 +10,74 @@
     const videoName = urlParams.get("videoName")
     const subtitleName = urlParams.get("subtitleName")
     const title = document.getElementById("title")
+    const watchPartyId = urlParams.get("watchPartyId")
+    let joined = false
+
+    syncSocket.onopen = async () => {
+        await syncSocket.send(JSON.stringify({"event": "join", "watchPartyId": watchPartyId}));
+    }
 
 
-    function playEventHandler(time) {
-        const message = JSON.stringify({"event": "play", "time": time});
-        syncSocket.send(message)
+    async function playEventHandler(time) {
+        const message = JSON.stringify({"event": "play", "time": time, "watchPartyId": watchPartyId});
+        await syncSocket.send(message)
         console.log("sending ws message: ", message)
     }
-    function pauseEventHandler(time) {
-        const message = JSON.stringify({"event": "pause", "time": time});
-        syncSocket.send(message)
+    async function pauseEventHandler(time) {
+        const message = JSON.stringify({"event": "pause", "time": time, "watchPartyId": watchPartyId});
+        await syncSocket.send(message)
         console.log("sending ws message: ", message)
     }
     let lastSeekTime = 0
-    function seekEventHandler(time) {
+    async function seekEventHandler(time) {
         // Only send seek events if user manually sought the video
         // and not from programmatic seeks from other events
         if (Math.abs(time - lastSeekTime) > 0.5) {
-            const message = JSON.stringify({"event": "seek", "time": time});
-            syncSocket.send(message)
+            const message = JSON.stringify({"event": "seek", "time": time, "watchPartyId": watchPartyId});
+            await syncSocket.send(message)
             console.log("sending ws message: ", message)
         }
         lastSeekTime = time;
     }
+
+    // Handle current time request from new joiners
+    function joinResponse() {
+        let video = document.getElementById("video-player");
+        if (video) {
+            const message = JSON.stringify({
+                "event": "join_response",
+                "time": video.currentTime,
+                "watchPartyId": watchPartyId,
+                "isPlaying": !video.paused
+            });
+            syncSocket.send(message);
+        }
+    }
+
     syncSocket.onmessage = (event) => {
         let video = document.getElementById("video-player")
         const msg = JSON.parse(event.data)
         console.log("recieved ws message: ", msg)
         const eventType = msg.event
         const time = msg.time
+        if (msg.watchPartyId !== watchPartyId) {
+            return;
+        }
         switch (eventType) {
+            case "join":
+                joinResponse();
+                break;
+            case "join_response":
+                if (!joined) {
+                    video.currentTime = time;
+                    if (msg.isPlaying) {
+                        video.play();
+                    } else {
+                        video.pause();
+                    }
+                    joined = true;
+                }
+                break;
             case "play":
                 video.currentTime = time;
                 video.play();
@@ -60,7 +98,6 @@
     });
 </script>
 
-{#if authConfig.isAuthenticated}
 <div class="flex justify-center">
     <video id="video-player"
         width="90%" 
@@ -77,10 +114,3 @@
         Your browser does not support the video tag.
     </video>
 </div>
-
-{:else} 
-    <Alert color="red">
-        <span class="font-medium">Access Denied</span>
-        You must be logged in to watch
-    </Alert>
-{/if}

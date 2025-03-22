@@ -6,6 +6,7 @@ server:
   client_location: /client
   # You can instead proxy to the node dev server if running locally
   # client_location: http://localhost:5173
+  auth_enabled: false
 
 discord:
   client_id: "DiscordAppClientId"

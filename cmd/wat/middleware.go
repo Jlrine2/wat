@@ -7,6 +7,10 @@ import (
 
 func (app *application) RequireAuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if !app.config.Server.AuthEnabled {
+			next.ServeHTTP(w, r)
+			return
+		}
 		cookie, err := r.Cookie("watAuth")
 		if err != nil {
 			app.logger.Info("Unable to get watAuth cookie")

@@ -49,7 +49,10 @@ func (c *Client) readPump() {
 			break
 		}
 		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
-		c.hub.broadcast <- message
+		c.hub.broadcast <- broadcastMessage{
+			sender:  c,
+			message: message,
+		}
 	}
 }
 
@@ -93,21 +96,27 @@ func (c *Client) writePump() {
 	}
 }
 
+type broadcastMessage struct {
+	sender  *Client
+	message []byte
+}
+
 type SyncHub struct {
 	clients    map[*Client]bool
-	broadcast  chan []byte
+	broadcast  chan broadcastMessage
 	register   chan *Client
 	unregister chan *Client
 }
 
 func newHub() *SyncHub {
 	return &SyncHub{
-		broadcast:  make(chan []byte),
+		broadcast:  make(chan broadcastMessage),
 		register:   make(chan *Client),
 		unregister: make(chan *Client),
 		clients:    make(map[*Client]bool),
 	}
 }
+
 func (h *SyncHub) Run() {
 	for {
 		select {
@@ -120,13 +129,15 @@ func (h *SyncHub) Run() {
 				delete(h.clients, client)
 				close(client.send)
 			}
-		case message := <-h.broadcast:
+		case msg := <-h.broadcast:
 			for client := range h.clients {
-				select {
-				case client.send <- message:
-				default:
-					close(client.send)
-					delete(h.clients, client)
+				if client != msg.sender { // Don't send back to sender
+					select {
+					case client.send <- msg.message:
+					default:
+						close(client.send)
+						delete(h.clients, client)
+					}
 				}
 			}
 		}
