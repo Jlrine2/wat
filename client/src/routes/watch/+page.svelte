@@ -3,6 +3,7 @@
 
     import { authConfig } from "$lib/auth";
     import { Alert } from "flowbite-svelte";
+    import { onDestroy } from "svelte";
 
     const syncSocket = new WebSocket(`/ws`);
     const urlParams = new URLSearchParams(window.location.search)
@@ -52,7 +53,11 @@
                 video.currentTime = time;
                 break;
         }
-}
+    }
+
+    onDestroy(() => {
+        syncSocket.close();
+    });
 </script>
 
 {#if authConfig.isAuthenticated}
