@@ -40,7 +40,7 @@ func main() {
 		Addr:         fmt.Sprintf("%s:%s", config.Server.Host, config.Server.Port),
 		Handler:      app.routes(),
 		IdleTimeout:  time.Minute,
-		ReadTimeout:  10 * time.Second,
+		ReadTimeout:  2 * time.Minute,
 		WriteTimeout: 15 * time.Second,
 		ErrorLog:     slog.NewLogLogger(app.logger.Handler(), slog.LevelError),
 	}

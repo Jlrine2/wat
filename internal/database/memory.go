@@ -1,7 +1,6 @@
 package database
 
 import (
-	"fmt"
 	"wat/internal/models"
 )
 
@@ -25,7 +24,7 @@ func (db *MemoryDatabase) SaveAuthSession(key string, value *models.AccessTokenD
 func (db *MemoryDatabase) GetAuthSession(key string) (*models.AccessTokenDetails, error) {
 	result, ok := db.sessions[key]
 	if !ok {
-		return nil, fmt.Errorf("auth session not found")
+		return nil, nil
 	}
 
 	return result, nil

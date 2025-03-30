@@ -2,6 +2,9 @@
 media/*
 # configs
 config/*
+# infrastructure
+infra/*
+
 !config/example.yaml
 # IDE configs
 .idea

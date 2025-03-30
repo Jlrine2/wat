@@ -5,7 +5,7 @@
     let uploadProgress = 0;
     let isUploading = false;
     /**
-     * @type {string | Blob}
+     * @type {FileList | undefined}
      */
     let selectedFile;
 
@@ -20,12 +20,12 @@
         uploadProgress = 0;
 
         const formData = new FormData();
-        formData.append('file', selectedFile);
+        formData.append('file', selectedFile[0]);
 
         try {
             const xhr = new XMLHttpRequest();
+            xhr.timeout = 1000*60*5;
             xhr.open('POST', '/media');
-
             xhr.upload.onprogress = (e) => {
                 if (e.lengthComputable) {
                     uploadProgress = (e.loaded / e.total) * 100;
@@ -45,6 +45,15 @@
                 alert('Upload failed');
                 isUploading = false;
             };
+            xhr.ontimeout = () => {
+                alert('Upload Timed out');
+                isUploading = false;
+            };
+            xhr.onabort = () => {
+                alert('Upload aborted');
+                isUploading = false;
+            };
+
 
             xhr.send(formData);
         } catch (error) {
@@ -83,11 +92,6 @@
         } catch (error) {
             alert('Failed to delete file');
         }
-    }
-
-    // @ts-ignore
-    function handleFileSelect(event) {
-        selectedFile = event.target.files[0];
     }
 
 
@@ -148,7 +152,7 @@
   <Modal bind:open={formModal} size="xs" autoclose={false} class="w-full">
     <form class="flex flex-col space-y-6" on:submit={handleSubmit}>
         <Label class="pb-2">Upload file</Label>
-        <Fileupload name="file" on:change={handleFileSelect} />
+        <Fileupload name="file" bind:files={selectedFile} />
         {#if isUploading}
             <Progressbar progress={uploadProgress} size="h-3" />
         {/if}
