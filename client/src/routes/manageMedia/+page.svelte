@@ -152,7 +152,7 @@
   <Modal bind:open={formModal} size="xs" autoclose={false} class="w-full">
     <form class="flex flex-col space-y-6" on:submit={handleSubmit}>
         <Label class="pb-2">Upload file</Label>
-        <Fileupload name="file" bind:files={selectedFile} />
+        <Fileupload name="file" bind:files={selectedFile} accept="video/mp4, .vtt"/>
         {#if isUploading}
             <Progressbar progress={uploadProgress} size="h-3" />
         {/if}
