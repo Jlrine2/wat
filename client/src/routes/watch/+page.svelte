@@ -110,7 +110,9 @@
         on:seeked={(e) => seekEventHandler(e.target.currentTime)}
     >
         <source src="/media/{videoName}" type="video/mp4">
-        <track kind="captions" src="/media/{subtitleName}">
+        {#if subtitleName}
+            <track kind="captions" src="/media/{subtitleName}">
+        {/if}
         Your browser does not support the video tag.
     </video>
 </div>

@@ -7,7 +7,11 @@ const config = {
 	// for more information about preprocessors
 	preprocess: vitePreprocess(),
 	darkMode: 'class',
-
+    compilerOptions: {
+        warningFilter: (warning) => {
+            return !warning.message.includes('`<video>` elements must have a `<track')
+        }
+    },
 	kit: {
 	adapter: adapter({
 			pages: 'build',
