@@ -41,23 +41,43 @@ func (app *application) DiscordCallbackHandler(w http.ResponseWriter, r *http.Re
 		app.logger.Info("Unable to get access token", "error", err.Error())
 		return
 	}
-	sessionId, err := auth.CreateSession(accessToken, app.db)
+	user, err := auth.GetDiscordAuthDetails(accessToken)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		app.logger.Error("error creating session token", "error", err.Error())
+		app.logger.Error("error getting auth details", "error", err.Error())
+		return
 	}
-	isGuildMember, err := auth.GetDiscordGuildMembership(accessToken, app.config.DiscordOauth.GuildId)
+	userGuilds, err := auth.GetDiscordGuildMembership(accessToken)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		app.logger.Error("error getting guild membership", "error", err.Error())
 		return
+	}
+	isGuildMember := false
+	for _, guild := range userGuilds {
+		if guild.ID == app.config.DiscordOauth.MemberGuildIds[0] {
+			isGuildMember = true
+		}
 	}
 	if !isGuildMember {
 		w.WriteHeader(http.StatusForbidden)
 		app.logger.Info("User is not in expected guild")
 		return
 	}
-
+	accessTokenDetails := &models.Session{
+		AccessToken:  accessToken.AccessToken,
+		RefreshToken: accessToken.RefreshToken,
+		ExpiresIn:    accessToken.ExpiresIn,
+		Scope:        accessToken.Scope,
+		User:         user,
+		Guilds:       userGuilds,
+	}
+	sessionId, err := auth.CreateSession(accessTokenDetails, app.db)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		app.logger.Error("error creating session", "error", err.Error())
+		return
+	}
 	http.SetCookie(w, &http.Cookie{
 		Name:   "watAuth",
 		Value:  sessionId,
@@ -68,41 +88,15 @@ func (app *application) DiscordCallbackHandler(w http.ResponseWriter, r *http.Re
 }
 
 func (app *application) GetAuthDetailsHandler(w http.ResponseWriter, r *http.Request) {
-	cookie, err := r.Cookie("watAuth")
-	if err != nil {
-		app.logger.Info("Unable to get watAuth cookie")
-		w.WriteHeader(http.StatusUnauthorized)
+	session, ok := r.Context().Value("session").(*models.Session)
+	if !ok || session == nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
-	accessToken, err := auth.GetSession(cookie.Value, app.db)
+	err := writeJSON(w, &session.User, http.StatusOK, nil)
 	if err != nil {
-		app.logger.Info("Unable to get session details from database", "error", err.Error())
-		err = writeJSON(
-			w,
-			&map[string]bool{"authenticated": false},
-			http.StatusUnauthorized,
-			nil,
-		)
-		if err != nil {
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		}
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
-	}
-	authDetails, err := auth.GetDiscordAuthDetails(accessToken)
-	if err != nil {
-		w.WriteHeader(http.StatusUnauthorized)
-		return
-	}
-	authenticated := authDetails != nil
-
-	if authenticated {
-		err = writeJSON(w, &authDetails, http.StatusOK, nil)
-	} else {
-		w.WriteHeader(http.StatusUnauthorized)
-	}
-	if err != nil {
-		http.Error(w, "We are unable to process your request right now", http.StatusInternalServerError)
-		w.WriteHeader(http.StatusInternalServerError)
 	}
 }
 

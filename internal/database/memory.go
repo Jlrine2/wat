@@ -5,23 +5,23 @@ import (
 )
 
 type MemoryDatabase struct {
-	sessions     map[string]*models.AccessTokenDetails
+	sessions     map[string]*models.Session
 	watchParties map[string]*models.WatchParty
 }
 
 func NewMemoryDatabase() *MemoryDatabase {
 	return &MemoryDatabase{
-		sessions:     make(map[string]*models.AccessTokenDetails),
+		sessions:     make(map[string]*models.Session),
 		watchParties: make(map[string]*models.WatchParty),
 	}
 }
 
-func (db *MemoryDatabase) SaveAuthSession(key string, value *models.AccessTokenDetails) error {
+func (db *MemoryDatabase) SaveAuthSession(key string, value *models.Session) error {
 	db.sessions[key] = value
 	return nil
 }
 
-func (db *MemoryDatabase) GetAuthSession(key string) (*models.AccessTokenDetails, error) {
+func (db *MemoryDatabase) GetAuthSession(key string) (*models.Session, error) {
 	result, ok := db.sessions[key]
 	if !ok {
 		return nil, nil

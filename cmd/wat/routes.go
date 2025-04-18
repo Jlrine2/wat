@@ -12,10 +12,11 @@ func (app *application) routes() http.Handler {
 
 	// Media
 	router.Handle("GET /media", app.RequireAuthMiddleware(
-		http.HandlerFunc(app.MediaListHandler)))
-	router.Handle("POST /media", app.RequireAuthMiddleware(
+		http.HandlerFunc(app.MediaListHandler),
+	))
+	router.Handle("POST /media", app.RequireAdminMiddleware(
 		http.HandlerFunc(app.MediaUploadHandler)))
-	router.Handle("DELETE /media", app.RequireAuthMiddleware(
+	router.Handle("DELETE /media", app.RequireAdminMiddleware(
 		http.HandlerFunc(app.MediaDeleteHandler)))
 	router.Handle("/media/", app.RequireAuthMiddleware(
 		http.StripPrefix("/media/",
@@ -23,11 +24,11 @@ func (app *application) routes() http.Handler {
 		)))
 
 	// Watch Parties
-	router.Handle("POST /watch-parties", app.RequireAuthMiddleware(
+	router.Handle("POST /watch-parties", app.RequireAdminMiddleware(
 		http.HandlerFunc(app.CreateWatchPartyHandler)))
 	router.Handle("GET /watch-parties", app.RequireAuthMiddleware(
 		http.HandlerFunc(app.ListWatchPartyHandler)))
-	router.Handle("DELETE /watch-parties", app.RequireAuthMiddleware(
+	router.Handle("DELETE /watch-parties", app.RequireAdminMiddleware(
 		http.HandlerFunc(app.DeleteWatchPartyHandler)))
 
 	// Client
@@ -46,5 +47,6 @@ func (app *application) routes() http.Handler {
 	// Websocket
 	router.Handle("/ws", app.RequireAuthMiddleware(http.HandlerFunc(app.SyncHandler)))
 
-	return router
+	handler := app.LoggerMiddleware(router)
+	return handler
 }

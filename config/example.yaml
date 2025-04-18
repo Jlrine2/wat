@@ -12,4 +12,7 @@ discord:
   client_id: "DiscordAppClientId"
   client_secret: DiscordAppClientSecret
   redirect_uri: http://localhost:8080/auth/discord/callback
-  guild_id: "DiscordGuidUsersMustBeInForAccess"
+  member_guild_ids:
+    - "DiscordGuidUsersMustBeInForAccess"
+  admin_user_ids:
+    - "DiscordUserIdOfAdmin"

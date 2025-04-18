@@ -15,10 +15,11 @@ type ServerConfig struct {
 }
 
 type DiscordOauthConfig struct {
-	ClientID     string `json:"client_id" yaml:"client_id"`
-	ClientSecret string `json:"client_secret" yaml:"client_secret"`
-	RedirectUri  string `json:"redirect_uri" yaml:"redirect_uri"`
-	GuildId      string `json:"guild_id" yaml:"guild_id"`
+	ClientID       string   `json:"client_id" yaml:"client_id"`
+	ClientSecret   string   `json:"client_secret" yaml:"client_secret"`
+	RedirectUri    string   `json:"redirect_uri" yaml:"redirect_uri"`
+	MemberGuildIds []string `json:"member_guild_ids" yaml:"member_guild_ids"`
+	AdminUserIds   []string `json:"admin_user_ids" yaml:"admin_user_ids"`
 }
 
 type Config struct {
